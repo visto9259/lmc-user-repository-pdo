@@ -1,15 +1,20 @@
 {
-  "name": "lm-commons/repository-template",
-  "description": "Repository template",
+  "name": "lm-commons/lmc-user-repository-pdo",
+  "description": "PDO based LMC User Repository",
   "license": "BSD-3-Clause",
   "authors": [
     {
-      "name": "Firstname Lastname",
-      "email": "email@example.com"
+      "name": "Eric Richer",
+      "email": "eric.richer@vistoconsulting.com"
     }
   ],
   "require": {
-    "php": "~8.2.0 || ~8.3.0 || ~8.4.0"
+    "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+    "laminas/laminas-eventmanager": "^3.8",
+    "laminas/laminas-hydrator": "^4.15",
+    "laminas/laminas-stdlib": "^3.3",
+    "lm-commons/lmc-user-repository": "^1.1",
+    "ext-pdo": "*"
   },
   "require-dev": {
     "laminas/laminas-coding-standard": "^3.1",
@@ -18,17 +23,26 @@
     "vimeo/psalm": "^6.10"
   },
   "autoload": {
-
+    "psr-4": {
+      "Lmc\\User\\Repository\\Pdo\\": "src/"
+    }
   },
   "autoload-dev": {
-
+    "psr-4": {
+      "LmcTest\\User\\Repository\\Pdo\\": "test/"
+    }
+  },
+  "extra": {
+    "laminas": {
+      "config-provider": "Lmc\\User\\Repository\\Pdo\\ConfigProvider"
+    }
   },
   "config": {
     "allow-plugins": {
       "dealerdirect/phpcodesniffer-composer-installer": true
     },
     "platform": {
-      "php": "8.2.99"
+      "php": "8.3.99"
     }
   },
   "scripts": {

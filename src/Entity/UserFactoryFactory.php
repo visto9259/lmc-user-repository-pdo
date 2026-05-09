@@ -15,7 +15,11 @@ class UserFactoryFactory
 {
     public function __invoke(ContainerInterface $container): callable
     {
-        return static function (string|int|null $identity, array $roles, array $details): UserInterface {
+        return static function (
+            string|int|null $identity = null,
+            array $roles = [],
+            array $details = []
+        ): UserInterface {
             Assert::allString($roles);
             Assert::isMap($details);
 

@@ -9,12 +9,12 @@ use Override;
 
 class User implements UserInterface
 {
-    protected int|string|null $id  = null;
-    protected ?string $username    = null;
-    protected ?string $password    = null;
-    protected ?string $email       = null;
-    protected ?string $displayName = null;
-    protected array $roles         = [];
+    protected int|string|null $id    = null;
+    protected ?string $username      = null;
+    protected ?string $password      = null;
+    protected ?string $email         = null;
+    protected ?string $displayName   = null;
+    protected array $roles           = [];
     protected int|string|null $state = null;
 
     /**
@@ -132,7 +132,7 @@ class User implements UserInterface
     }
 
     #[Override]
-    public function setRoles(array $roles=[]): UserInterface
+    public function setRoles(array $roles = []): UserInterface
     {
         $this->roles = $roles;
         return $this;

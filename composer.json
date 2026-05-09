@@ -14,7 +14,8 @@
     "laminas/laminas-hydrator": "^4.15",
     "laminas/laminas-stdlib": "^3.3",
     "lm-commons/lmc-user-repository": "^1.1",
-    "ext-pdo": "*"
+    "ext-pdo": "*",
+    "webmozart/assert": "^2.0"
   },
   "require-dev": {
     "laminas/laminas-coding-standard": "^3.1",

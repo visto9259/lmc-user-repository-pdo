@@ -59,13 +59,8 @@ class Pdo implements AdapterInterface
     {
         $this->getEventManager()->trigger('update.pre', $this, ['entity' => $user]);
         $data      = $this->hydrator->extract($user);
-        $statement = "INSERT INTO $this->tableName SET
-                            username     = :username,
-                            email        = :email,
-                            display_name = :display_name,
-                            password     = :password,
-                            state        = :state,
-                            roles        = :roles";
+        $statement = "INSERT INTO $this->tableName (username, email, display_name, password, state, roles)
+            VALUES (:username, :email, :display_name, :password, :state, :roles)";
         $select    = $this->pdo->prepare($statement);
         $result    = $select->execute([
             ':username'     => $data['username'],

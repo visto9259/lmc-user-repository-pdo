@@ -215,16 +215,16 @@
         },
         {
             "name": "lm-commons/lmc-user-repository",
-            "version": "1.1.0",
+            "version": "1.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/LM-Commons/lmc-user-repository.git",
-                "reference": "c8034a5c91a079f9c955d7321ffda378b06433dc"
+                "reference": "d3a507690aaab9bfb5be1f37e927dd45b86e1c07"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/LM-Commons/lmc-user-repository/zipball/c8034a5c91a079f9c955d7321ffda378b06433dc",
-                "reference": "c8034a5c91a079f9c955d7321ffda378b06433dc",
+                "url": "https://api.github.com/repos/LM-Commons/lmc-user-repository/zipball/d3a507690aaab9bfb5be1f37e927dd45b86e1c07",
+                "reference": "d3a507690aaab9bfb5be1f37e927dd45b86e1c07",
                 "shasum": ""
             },
             "require": {
@@ -255,9 +255,9 @@
             "description": "Lmc User Repository Interface",
             "support": {
                 "issues": "https://github.com/LM-Commons/lmc-user-repository/issues",
-                "source": "https://github.com/LM-Commons/lmc-user-repository/tree/1.1.0"
+                "source": "https://github.com/LM-Commons/lmc-user-repository/tree/1.2.0"
             },
-            "time": "2026-04-29T16:11:58+00:00"
+            "time": "2026-05-09T20:35:55+00:00"
         },
         {
             "name": "mezzio/mezzio-authentication",

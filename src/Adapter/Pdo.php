@@ -57,7 +57,7 @@ class Pdo implements AdapterInterface
     #[Override]
     public function insert(UserInterface $user): mixed
     {
-        $this->getEventManager()->trigger('update.pre', $this, ['entity' => $user]);
+        $this->getEventManager()->trigger(__FUNCTION__ . '.pre', $this, ['entity' => $user]);
         $data      = $this->hydrator->extract($user);
         $statement = "INSERT INTO $this->tableName (username, email, display_name, password, state, roles)
             VALUES (:username, :email, :display_name, :password, :state, :roles)";
@@ -75,13 +75,14 @@ class Pdo implements AdapterInterface
         }
         $lastInsertId = $this->pdo->lastInsertId();
         $entity       = $this->innerSelect($this->idColumn, $lastInsertId);
-        $this->getEventManager()->trigger('update.post', $this, ['entity' => $entity]);
+        $this->getEventManager()->trigger(__FUNCTION__ . '.post', $this, ['entity' => $entity]);
+        return $entity;
     }
 
     #[Override]
     public function update(UserInterface $user): mixed
     {
-        $this->getEventManager()->trigger('update.pre', $this, ['entity' => $user]);
+        $this->getEventManager()->trigger(__FUNCTION__ . '.pre', $this, ['entity' => $user]);
         $data      = $this->hydrator->extract($user);
         $id        = $data[$this->idColumn];
         $statement = "UPDATE $this->tableName SET
@@ -106,14 +107,14 @@ class Pdo implements AdapterInterface
             return null;
         }
         $entity = $this->innerSelect($this->idColumn, $id);
-        $this->getEventManager()->trigger('update.post', $this, ['entity' => $entity]);
+        $this->getEventManager()->trigger(__FUNCTION__ . '.post', $this, ['entity' => $entity]);
         return $entity;
     }
 
     #[Override]
     public function delete(UserInterface $user): mixed
     {
-        $this->getEventManager()->trigger('delete.pre', $this, ['entity' => $user]);
+        $this->getEventManager()->trigger(__FUNCTION__ . '.pre', $this, ['entity' => $user]);
         $statement = "DELETE FROM $this->tableName WHERE $this->idColumn=:id";
         $select    = $this->pdo->prepare($statement);
         $result    = $select->execute([

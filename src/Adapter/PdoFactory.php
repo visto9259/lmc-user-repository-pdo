@@ -64,6 +64,7 @@ class PdoFactory
             $basePdo,
             $hydrator,
             $entity,
+            $options->getPasswordCost(),
             $options->getTableName(),
             $options->getIdFieldName(),
         );

@@ -12,6 +12,11 @@ use Lmc\User\Repository\UserInterface;
 use Override;
 
 use function assert;
+use function explode;
+use function password_hash;
+use function password_verify;
+
+use const PASSWORD_BCRYPT;
 
 class Pdo implements AdapterInterface
 {
@@ -21,6 +26,7 @@ class Pdo implements AdapterInterface
         protected \PDO $pdo,
         protected HydratorInterface $hydrator,
         protected readonly UserInterface $entityPrototype,
+        protected readonly int $passwordCost,
         protected readonly ?string $tableName = 'user',
         protected readonly ?string $idColumn = 'id',
     ) {
@@ -124,6 +130,26 @@ class Pdo implements AdapterInterface
             return null;
         }
         return true;
+    }
+
+    public function validateCredential(UserInterface $user, string $credential): bool
+    {
+        return password_verify($credential, $user->getPassword());
+    }
+
+    public function updateCredential(UserInterface $user, string $credential): void
+    {
+        $hash = explode('$', $user->getPassword());
+        if ($hash[2] === (string) $this->passwordCost) {
+            return;
+        }
+        $user->setPassword(password_hash($credential, PASSWORD_BCRYPT, ['cost' => $this->passwordCost]));
+        $statement = "UPDATE $this->tableName SET password=:credential WHERE id=:id";
+        $select    = $this->pdo->prepare($statement);
+        $select->execute([
+            ':credential' => $user->getPassword(),
+            ':id'         => $user->getId(),
+        ]);
     }
 
     private function innerSelect(string $field, int|string $value): ?UserInterface

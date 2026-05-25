@@ -11,6 +11,7 @@ use Lmc\User\Repository\AdapterInterface;
 use Lmc\User\Repository\UserInterface;
 use Override;
 
+use Webmozart\Assert\Assert;
 use function assert;
 use function explode;
 use function password_hash;
@@ -132,18 +133,24 @@ class Pdo implements AdapterInterface
         return true;
     }
 
-    public function validateCredential(UserInterface $user, string $credential): bool
+    #[Override]
+    public function validateCredential(UserInterface $user, mixed $credential): bool
     {
+        Assert::string($credential);
+        Assert::string($user->getPassword());
         return password_verify($credential, $user->getPassword());
     }
 
-    public function updateCredential(UserInterface $user, string $credential): void
+    #[Override]
+    public function updateCredential(UserInterface $user, mixed $credential): void
     {
+        Assert::string($credential);
+        Assert::string($user->getPassword());
         $hash = explode('$', $user->getPassword());
         if ($hash[2] === (string) $this->passwordCost) {
             return;
         }
-        $user->setPassword(password_hash($credential, PASSWORD_BCRYPT, ['cost' => $this->passwordCost]));
+        $user->setPassword(password_hash((string) $credential, PASSWORD_BCRYPT, ['cost' => $this->passwordCost]));
         $statement = "UPDATE $this->tableName SET password=:credential WHERE id=:id";
         $select    = $this->pdo->prepare($statement);
         $select->execute([

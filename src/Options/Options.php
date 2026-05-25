@@ -36,6 +36,8 @@ final class Options extends AbstractOptions
 
     protected array $pdo = [];
 
+    protected int $passwordCost = 14;
+
     public function setUserEntityClass(string $userEntityClass): Options
     {
         Assert::classExists($userEntityClass);
@@ -95,6 +97,17 @@ final class Options extends AbstractOptions
     public function setPdo(array $pdo): self
     {
         $this->pdo = $pdo;
+        return $this;
+    }
+
+    public function getPasswordCost(): int
+    {
+        return $this->passwordCost;
+    }
+
+    public function setPasswordCost(int $passwordCost): self
+    {
+        $this->passwordCost = $passwordCost;
         return $this;
     }
 }

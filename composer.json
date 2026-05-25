@@ -13,12 +13,13 @@
     "laminas/laminas-eventmanager": "^3.8",
     "laminas/laminas-hydrator": "^4.15",
     "laminas/laminas-stdlib": "^3.3",
-    "lm-commons/lmc-user-repository": "^1.1",
-    "ext-pdo": "*"
+    "lm-commons/lmc-user-repository": "^1.3",
+    "ext-pdo": "*",
+    "webmozart/assert": "^1.10 || ^2.0"
   },
   "require-dev": {
     "laminas/laminas-coding-standard": "^3.1",
-    "phpunit/phpunit": "^11.5",
+    "phpunit/phpunit": "^12.5",
     "psalm/plugin-phpunit": "^0.19.5",
     "vimeo/psalm": "^6.10"
   },

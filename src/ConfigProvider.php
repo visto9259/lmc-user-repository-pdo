@@ -9,8 +9,10 @@ use Lmc\User\Repository\Pdo\Adapter\BaseUserHydratorFactory;
 use Lmc\User\Repository\Pdo\Adapter\PdoFactory;
 use Lmc\User\Repository\Pdo\Adapter\UserHydrator;
 use Lmc\User\Repository\Pdo\Adapter\UserHydratorFactory;
+use Lmc\User\Repository\Pdo\Entity\UserFactoryFactory;
 use Lmc\User\Repository\Pdo\Options\Options;
 use Lmc\User\Repository\Pdo\Options\OptionsFactory;
+use Lmc\User\Repository\UserInterface;
 
 class ConfigProvider
 {
@@ -33,6 +35,7 @@ class ConfigProvider
                 AdapterInterface::class    => PdoFactory::class,
                 Options::class             => OptionsFactory::class,
                 UserHydrator::class        => UserHydratorFactory::class,
+                UserInterface::class       => UserFactoryFactory::class,
             ],
         ];
     }

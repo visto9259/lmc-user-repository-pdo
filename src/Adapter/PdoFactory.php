@@ -7,6 +7,7 @@ namespace Lmc\User\Repository\Pdo\Adapter;
 use Laminas\Hydrator\HydratorInterface;
 use Lmc\User\Repository\Pdo\Exception\ServiceNotCreatedException;
 use Lmc\User\Repository\Pdo\Options\Options;
+use Lmc\User\Repository\UserInterface;
 use PDO as BasePDO;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
@@ -45,7 +46,9 @@ class PdoFactory
             $pdoOptions['options'] ?? null,
         );
 
-        $entityClass = $options->getUserEntityClass();
+        /** @var callable $userFactory */
+        $userFactory = $container->get(UserInterface::class);
+        $entity      = $userFactory();
 
         $hydrator = $container->get('lmcuser_user_hydrator');
         if (! $hydrator instanceof HydratorInterface) {
@@ -60,7 +63,8 @@ class PdoFactory
         return new Pdo(
             $basePdo,
             $hydrator,
-            new $entityClass(),
+            $entity,
+            $options->getPasswordCost(),
             $options->getTableName(),
             $options->getIdFieldName(),
         );

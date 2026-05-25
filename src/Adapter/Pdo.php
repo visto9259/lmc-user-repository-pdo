@@ -10,8 +10,15 @@ use Laminas\Hydrator\HydratorInterface;
 use Lmc\User\Repository\AdapterInterface;
 use Lmc\User\Repository\UserInterface;
 use Override;
+use Webmozart\Assert\Assert;
 
 use function assert;
+use function explode;
+use function password_hash;
+use function password_verify;
+use function preg_match;
+
+use const PASSWORD_BCRYPT;
 
 class Pdo implements AdapterInterface
 {
@@ -21,6 +28,7 @@ class Pdo implements AdapterInterface
         protected \PDO $pdo,
         protected HydratorInterface $hydrator,
         protected readonly UserInterface $entityPrototype,
+        protected readonly int $passwordCost,
         protected readonly ?string $tableName = 'user',
         protected readonly ?string $idColumn = 'id',
     ) {
@@ -55,17 +63,15 @@ class Pdo implements AdapterInterface
     }
 
     #[Override]
-    public function insert(UserInterface $user): mixed
+    public function insert(UserInterface $user): ?UserInterface
     {
-        $this->getEventManager()->trigger('update.pre', $this, ['entity' => $user]);
+        if (! $this->isHash($user->getPassword())) {
+            $user->setPassword(password_hash($user->getPassword(), PASSWORD_BCRYPT, ['cost' => $this->passwordCost]));
+        }
+        $this->getEventManager()->trigger(__FUNCTION__ . '.pre', $this, ['entity' => $user]);
         $data      = $this->hydrator->extract($user);
-        $statement = "INSERT INTO $this->tableName SET
-                            username     = :username,
-                            email        = :email,
-                            display_name = :display_name,
-                            password     = :password,
-                            state        = :state,
-                            roles        = :roles";
+        $statement = "INSERT INTO $this->tableName (username, email, display_name, password, state, roles)
+            VALUES (:username, :email, :display_name, :password, :state, :roles)";
         $select    = $this->pdo->prepare($statement);
         $result    = $select->execute([
             ':username'     => $data['username'],
@@ -80,13 +86,14 @@ class Pdo implements AdapterInterface
         }
         $lastInsertId = $this->pdo->lastInsertId();
         $entity       = $this->innerSelect($this->idColumn, $lastInsertId);
-        $this->getEventManager()->trigger('update.post', $this, ['entity' => $entity]);
+        $this->getEventManager()->trigger(__FUNCTION__ . '.post', $this, ['entity' => $entity]);
+        return $entity;
     }
 
     #[Override]
-    public function update(UserInterface $user): mixed
+    public function update(UserInterface $user): ?UserInterface
     {
-        $this->getEventManager()->trigger('update.pre', $this, ['entity' => $user]);
+        $this->getEventManager()->trigger(__FUNCTION__ . '.pre', $this, ['entity' => $user]);
         $data      = $this->hydrator->extract($user);
         $id        = $data[$this->idColumn];
         $statement = "UPDATE $this->tableName SET
@@ -111,23 +118,51 @@ class Pdo implements AdapterInterface
             return null;
         }
         $entity = $this->innerSelect($this->idColumn, $id);
-        $this->getEventManager()->trigger('update.post', $this, ['entity' => $entity]);
+        $this->getEventManager()->trigger(__FUNCTION__ . '.post', $this, ['entity' => $entity]);
         return $entity;
     }
 
     #[Override]
-    public function delete(UserInterface $user): mixed
+    public function delete(UserInterface $user): bool
     {
-        $this->getEventManager()->trigger('delete.pre', $this, ['entity' => $user]);
+        $this->getEventManager()->trigger(__FUNCTION__ . '.pre', $this, ['entity' => $user]);
         $statement = "DELETE FROM $this->tableName WHERE $this->idColumn=:id";
         $select    = $this->pdo->prepare($statement);
         $result    = $select->execute([
             ':id' => $user->getId(),
         ]);
         if (! $result) {
-            return null;
+            return false;
         }
         return true;
+    }
+
+    #[Override]
+    public function validateCredential(UserInterface $user, mixed $credential): bool
+    {
+        Assert::string($credential);
+        Assert::string($user->getPassword());
+        return password_verify($credential, $user->getPassword());
+    }
+
+    #[Override]
+    public function updateCredential(UserInterface $user, mixed $credential): void
+    {
+        Assert::string($credential);
+        Assert::string($user->getPassword());
+        if (
+            ! $this->validateCredential($user, $credential)
+            || $this->costChanged($user->getPassword(), $this->passwordCost)
+        ) {
+            // Password was changed or cost has changed
+            $user->setPassword(password_hash((string) $credential, PASSWORD_BCRYPT, ['cost' => $this->passwordCost]));
+            $statement = "UPDATE $this->tableName SET password=:credential WHERE id=:id";
+            $select    = $this->pdo->prepare($statement);
+            $select->execute([
+                ':credential' => $user->getPassword(),
+                ':id'         => $user->getId(),
+            ]);
+        }
     }
 
     private function innerSelect(string $field, int|string $value): ?UserInterface
@@ -144,5 +179,17 @@ class Pdo implements AdapterInterface
         $entity = clone $this->entityPrototype;
         $this->hydrator->hydrate($row, $entity);
         return $entity;
+    }
+
+    private function isHash(string $password): bool
+    {
+        $hash = [];
+        return preg_match('/^\$2y\$\d+\$/', $password, $hash) === 1;
+    }
+
+    private function costChanged(string $password, int $cost): bool
+    {
+        $hash = explode('$', $password);
+        return $hash[2] !== (string) $cost;
     }
 }

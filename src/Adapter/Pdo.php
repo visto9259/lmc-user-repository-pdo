@@ -16,6 +16,7 @@ use function assert;
 use function explode;
 use function password_hash;
 use function password_verify;
+use function preg_match;
 
 use const PASSWORD_BCRYPT;
 
@@ -149,17 +150,19 @@ class Pdo implements AdapterInterface
     {
         Assert::string($credential);
         Assert::string($user->getPassword());
-        $hash = explode('$', $user->getPassword());
-        if ($hash[2] === (string) $this->passwordCost) {
-            return;
+        if (
+            ! $this->validateCredential($user, $credential)
+            || $this->costChanged($user->getPassword(), $this->passwordCost)
+        ) {
+            // Password was changed or cost has changed
+            $user->setPassword(password_hash((string) $credential, PASSWORD_BCRYPT, ['cost' => $this->passwordCost]));
+            $statement = "UPDATE $this->tableName SET password=:credential WHERE id=:id";
+            $select    = $this->pdo->prepare($statement);
+            $select->execute([
+                ':credential' => $user->getPassword(),
+                ':id'         => $user->getId(),
+            ]);
         }
-        $user->setPassword(password_hash((string) $credential, PASSWORD_BCRYPT, ['cost' => $this->passwordCost]));
-        $statement = "UPDATE $this->tableName SET password=:credential WHERE id=:id";
-        $select    = $this->pdo->prepare($statement);
-        $select->execute([
-            ':credential' => $user->getPassword(),
-            ':id'         => $user->getId(),
-        ]);
     }
 
     private function innerSelect(string $field, int|string $value): ?UserInterface
@@ -182,5 +185,11 @@ class Pdo implements AdapterInterface
     {
         $hash = [];
         return preg_match('/^\$2y\$\d+\$/', $password, $hash) === 1;
+    }
+
+    private function costChanged(string $password, int $cost): bool
+    {
+        $hash = explode('$', $password);
+        return $hash[2] !== (string) $cost;
     }
 }

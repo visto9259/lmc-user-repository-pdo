@@ -10,8 +10,8 @@ use Laminas\Hydrator\HydratorInterface;
 use Lmc\User\Repository\AdapterInterface;
 use Lmc\User\Repository\UserInterface;
 use Override;
-
 use Webmozart\Assert\Assert;
+
 use function assert;
 use function explode;
 use function password_hash;
@@ -62,8 +62,11 @@ class Pdo implements AdapterInterface
     }
 
     #[Override]
-    public function insert(UserInterface $user): mixed
+    public function insert(UserInterface $user): ?UserInterface
     {
+        if (! $this->isHash($user->getPassword())) {
+            $user->setPassword(password_hash($user->getPassword(), PASSWORD_BCRYPT, ['cost' => $this->passwordCost]));
+        }
         $this->getEventManager()->trigger(__FUNCTION__ . '.pre', $this, ['entity' => $user]);
         $data      = $this->hydrator->extract($user);
         $statement = "INSERT INTO $this->tableName (username, email, display_name, password, state, roles)
@@ -87,7 +90,7 @@ class Pdo implements AdapterInterface
     }
 
     #[Override]
-    public function update(UserInterface $user): mixed
+    public function update(UserInterface $user): ?UserInterface
     {
         $this->getEventManager()->trigger(__FUNCTION__ . '.pre', $this, ['entity' => $user]);
         $data      = $this->hydrator->extract($user);
@@ -119,7 +122,7 @@ class Pdo implements AdapterInterface
     }
 
     #[Override]
-    public function delete(UserInterface $user): mixed
+    public function delete(UserInterface $user): bool
     {
         $this->getEventManager()->trigger(__FUNCTION__ . '.pre', $this, ['entity' => $user]);
         $statement = "DELETE FROM $this->tableName WHERE $this->idColumn=:id";
@@ -128,7 +131,7 @@ class Pdo implements AdapterInterface
             ':id' => $user->getId(),
         ]);
         if (! $result) {
-            return null;
+            return false;
         }
         return true;
     }
@@ -173,5 +176,11 @@ class Pdo implements AdapterInterface
         $entity = clone $this->entityPrototype;
         $this->hydrator->hydrate($row, $entity);
         return $entity;
+    }
+
+    private function isHash(string $password): bool
+    {
+        $hash = [];
+        return preg_match('/^\$2y\$\d+\$/', $password, $hash) === 1;
     }
 }
